@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Finiquito Profesional - Bruno González</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --purple: #a288e3; --green: #00ff88; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; margin: 0; }
+        .container { background: var(--card); padding: 30px; border-radius: 12px; max-width: 900px; width: 100%; border-top: 5px solid var(--purple); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: var(--purple); text-align: center; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .field { display: flex; flex-direction: column; }
+        label { font-size: 0.7rem; margin-bottom: 5px; color: #aaa; font-weight: bold; text-transform: uppercase; }
+        input, select { background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--purple); }
+        
+        /* Estilo del Informe para PDF */
+        #informe { background: white; color: #333; padding: 40px; border-radius: 8px; margin-top: 25px; font-size: 0.9rem; line-height: 1.5; }
+        .header-inf { text-align: center; border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
+        .sec-titulo { background: #f0f0f0; padding: 8px 12px; font-weight: bold; border-left: 5px solid var(--purple); margin: 15px 0 10px 0; font-size: 1rem; }
+        .fila { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #ccc; }
+        .total-final { font-size: 1.5rem; text-align: right; margin-top: 25px; font-weight: bold; color: #1b5e20; border-top: 2px solid #333; padding-top: 10px; }
+        
+        button { width: 100%; margin-top: 20px; background: var(--green); color: #121212; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
+        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Calculadora Técnica de Finiquito</h2>
+
+    <div class="grid">
+        <div class="field"><label>Fecha de Inicio</label><input type="date" id="fInicio" onchange="calcular()"></div>
+        <div class="field"><label>Fecha de Término</label><input type="date" id="fTermino" onchange="calcular()"></div>
+        <div class="field"><label>Valor UF Actual ($)</label><input type="number" id="vUF" value="37500" oninput="calcular()"></div>
+        <div class="field">
+            <label>Causal Legal</label>
+            <select id="fCausal" onchange="calcular()">
+                <option value="NO_INDEM">Art. 159 (Renuncia / Mutuo Acuerdo)</option>
+                <option value="INDEM">Art. 161 (Necesidades de la Empresa)</option>
+                <option value="INDEM">Art. 171 (Autodespido)</option>
+                <option value="NO_INDEM">Art. 160 (Causales Disciplinarias)</option>
+            </select>
+        </div>
+        <div class="field hidden" id="boxAviso">
+            <label>¿Se dio aviso de 30 días?</label>
+            <select id="fAviso" onchange="calcular()"><option value="SI">Sí</option><option value="NO">No</option></select>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="field"><label>Sueldo Base</label><input type="number" id="sBase" value="0" oninput="calcular()"></div>
+        <div class="field"><label>Gratificación Mensual</label><input type="number" id="sGrat" value="0" oninput="calcular()"></div>
+        <div class="field"><label>Bonos/Comisiones (Promedio)</label><input type="number" id="sBono" value="0" oninput="calcular()"></div>
+        <div class="field"><label>Colación</label><input type="number" id="sCola" value="0" oninput="calcular()"></div>
+        <div class="field"><label>Movilización</label><input type="number" id="sMovi" value="0" oninput="calcular()"></div>
+        <div class="field"><label>Días Vacaciones Pendientes</label><input type="number" id="sVacDias" value="0" oninput="calcular()"></div>
+    </div>
+
+    <div id="informe">
+        <div class="header-inf">
+            <h2 style="margin:0; color:#333">DETALLE DE LIQUIDACIÓN DE FINIQUITO</h2>
+            <p id="txtFechaHoy" style="font-size: 0.8rem; color: #666;"></p>
+        </div>
+
+        <div id="secVac">
+            <div class="sec-titulo">I. VACACIONES PROPORCIONALES</div>
+            <div class="fila"><span>Días Hábiles Pendientes:</span><span id="infVacDias">0</span></div>
+            <div class="fila"><span>Base Diaria para Feriado (Sueldo+Bono):</span><span id="infVacBase">$0</span></div>
+            <div class="fila" style="border:none; font-weight:bold;"><span>Subtotal Vacaciones:</span><span id="infVacTotal">$0</span></div>
+        </div>
+
+        <div id="secIAS" class="hidden">
+            <div class="sec-titulo">II. INDEMNIZACIÓN POR AÑOS DE SERVICIO (IAS)</div>
+            <div class="fila"><span>Antigüedad Real:</span><span id="infAntigReal">0 años</span></div>
+            <div class="fila"><span>Años a Pagar (Tope Legal 11):</span><span id="infAniosPago">0</span></div>
+            <div class="fila"><span>Tope 90 UF aplicado:</span><span id="infTope90">$0</span></div>
+            <div class="fila" style="border:none; font-weight:bold;"><span>Subtotal IAS:</span><span id="infIASTotal">$0</span></div>
+        </div>
+
+        <div id="secAvisoInf" class="hidden">
+            <div class="sec-titulo">III. INDEMNIZACIÓN SUSTITUTIVA MES DE AVISO</div>
+            <div class="fila"><span>Monto (Base Mensual con Tope):</span><span id="infAvisoTotal">$0</span></div>
+        </div>
+
+        <div class="total-final">MONTO TOTAL LÍQUIDO: <span id="infTotal">$0</span></div>
+    </div>
+
+    <button onclick="generarPDF()">DESCARGAR FINIQUITO (PDF)</button>
+</div>
+
+<script>
+    const fmc = (v) => '$' + Math.round(v).toLocaleString('es-CL');
+
+    function calcular() {
+        const fi = new Date(document.getElementById('fInicio').value);
+        const ft = new Date(document.getElementById('fTermino').value);
+        if (isNaN(fi) || isNaN(ft)) return;
+
+        // Entradas
+        const uf = parseFloat(document.getElementById('vUF').value) || 0;
+        const sBase = parseFloat(document.getElementById('sBase').value) || 0;
+        const sGrat = parseFloat(document.getElementById('sGrat').value) || 0;
+        const sBono = parseFloat(document.getElementById('sBono').value) || 0;
+        const sCola = parseFloat(document.getElementById('sCola').value) || 0;
+        const sMovi = parseFloat(document.getElementById('sMovi').value) || 0;
+        const dVac = parseFloat(document.getElementById('sVacDias').value) || 0;
+        const causal = document.getElementById('fCausal').value;
+        const dioAviso = document.getElementById('fAviso').value;
+
+        // 1. Antigüedad y Regla de 6 meses (Tope 11 años)
+        let diff = ft - fi;
+        let aniosReales = diff / (1000 * 60 * 60 * 24 * 365.25);
+        let aniosBase = Math.floor(aniosReales);
+        let mesesSobrantes = Math.round((aniosReales - aniosBase) * 12);
+        
+        let aniosIndem = (mesesSobrantes > 6) ? aniosBase + 1 : aniosBase;
+        aniosIndem = Math.min(aniosIndem, 11); // Tope legal 11 años
+
+        // 2. Bases de Cálculo y Tope 90 UF
+        const baseIndem = sBase + sGrat + sBono + sCola + sMovi; // Incluye haberes no imponibles para IAS
+        const tope90 = uf * 90;
+        const baseConTope = Math.min(baseIndem, tope90);
+        const baseVacDia = (sBase + sBono) / 30; // Vacaciones solo consideran base y bonos variables
+
+        // 3. Lógica de Autodetección (Visibilidad)
+        const mostrarIndem = (causal === 'INDEM');
+        const mostrarAviso = (mostrarIndem && dioAviso === 'NO');
+
+        document.getElementById('secIAS').classList.toggle('hidden', !mostrarIndem);
+        document.getElementById('secAvisoInf').classList.toggle('hidden', !mostrarAviso);
+        document.getElementById('boxAviso').classList.toggle('hidden', !mostrarIndem);
+
+        // 4. Totales
+        const totalVac = dVac * baseVacDia;
+        const totalIAS = mostrarIndem ? (baseConTope * aniosIndem) : 0;
+        const totalAviso = mostrarAviso ? baseConTope : 0;
+
+        // 5. Inyectar en el Informe
+        document.getElementById('txtFechaHoy').innerText = "Simulación realizada el: " + new Date().toLocaleDateString();
+        document.getElementById('infVacDias').innerText = dVac;
+        document.getElementById('infVacBase').innerText = fmc(baseVacDia);
+        document.getElementById('infVacTotal').innerText = fmc(totalVac);
+
+        document.getElementById('infAntigReal').innerText = `${aniosBase} años y ${mesesSobrantes} meses`;
+        document.getElementById('infAniosPago').innerText = aniosIndem;
+        document.getElementById('infTope90').innerText = fmc(tope90);
+        document.getElementById('infIASTotal').innerText = fmc(totalIAS);
+
+        document.getElementById('infAvisoTotal').innerText = fmc(totalAviso);
+        document.getElementById('infTotal').innerText = fmc(totalVac + totalIAS + totalAviso);
+    }
+
+    function generarPDF() {
+        const element = document.getElementById('informe');
+        html2pdf().set({
+            margin: 1,
+            filename: 'Finiquito_Bruno_Gonzalez.pdf',
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        }).from(element).save();
+    }
+</script>
+
+</body>
+</html>
