@@ -2,89 +2,68 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Finiquitos</title>
+    <title>Calculadora de Finiquito - Bruno González</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --purple: #a288e3; --green: #00ff88; --text: #e0e0e0; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: var(--card); padding: 30px; border-radius: 12px; max-width: 600px; width: 100%; border-top: 5px solid var(--purple); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h2 { color: var(--purple); text-align: center; margin-bottom: 25px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        :root { --bg: #f4f7f6; --card: #ffffff; --purple: #6a1b9a; --text: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { background: var(--card); padding: 25px; border-radius: 8px; max-width: 850px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--purple); border-bottom: 2px solid var(--purple); padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px; }
         .field { display: flex; flex-direction: column; }
-        label { font-size: 0.75rem; color: #aaa; margin-bottom: 5px; font-weight: bold; }
-        input, select { background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; outline: none; }
-        #btnCalcular { width: 100%; background: var(--purple); color: white; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
-        #btnCalcular:hover { filter: brightness(1.2); }
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-        .modal-content { background: white; color: #333; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
-        .modal-content input { background: #f0f0f0; color: #333; border: 1px solid #ccc; width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 10px; border-radius: 5px; }
-        .btn-enviar { background: var(--green); color: #121212; padding: 12px 25px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; }
-        #informe-final { position: absolute; left: -9999px; background: white; color: #333; padding: 40px; width: 800px; }
-        .sec-titulo { background: #f0f0f0; padding: 8px; font-weight: bold; border-left: 5px solid #a288e3; margin: 15px 0; }
-        .fila { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #ccc; }
+        label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: #666; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        #btnPDF { background: #2e7d32; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        
+        /* Estilo del Informe en Pantalla */
+        #informe-final { margin-top: 30px; padding: 20px; border: 1px solid #ddd; background: white; }
+        .sec-titulo { background: #eee; padding: 10px; font-weight: bold; margin: 15px 0; border-left: 5px solid var(--purple); }
+        .fila { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+        .total-box { font-size: 1.4rem; text-align: right; margin-top: 20px; color: #2e7d32; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Ingreso de Datos para Finiquito</h2>
+    <h2>Calculadora Legal de Finiquitos</h2>
+    
     <div class="grid">
-        <div class="field"><label>FECHA INICIO</label><input type="date" id="fInicio" value="2008-10-05"></div>
-        <div class="field"><label>FECHA TÉRMINO</label><input type="date" id="fTermino" value="2025-12-30"></div>
-        <div class="field"><label>VALOR UF</label><input type="number" id="vUF" value="39727.96"></div>
-        <div class="field"><label>CAUSAL</label>
-            <select id="causal">
-                <option value="161">Art. 161 - Necesidades Empresa</option>
-                <option value="159">Art. 159 - Renuncia/Mutuo Acuerdo</option>
-            </select>
+        <div class="field"><label>VALOR UF Hoy</label><input type="number" id="vUF" value="39727.96" oninput="calcular()"></div>
+        <div class="field"><label>SUELDO BASE</label><input type="number" id="sBase" value="1000000" oninput="calcular()"></div>
+        <div class="field"><label>GRATIFICACIÓN</label><input type="number" id="sGrat" value="209396" oninput="calcular()"></div>
+        <div class="field"><label>BONOS/COMIS.</label><input type="number" id="sBono" value="2000000" oninput="calcular()"></div>
+        <div class="field"><label>COLACIÓN</label><input type="number" id="sCola" value="112500" oninput="calcular()"></div>
+        <div class="field"><label>MOVILIZACIÓN</label><input type="number" id="sMovi" value="76500" oninput="calcular()"></div>
+    </div>
+
+    <div id="informe-final">
+        <div style="text-align:center;">
+            <h3 style="margin:0;">DETALLE DE CÁLCULO ESTIMATIVO</h3>
+            <p style="color: #666; font-size: 0.9rem;">Basado en topes legales vigentes (11 años / 90 UF)</p>
+        </div>
+
+        <div class="sec-titulo">I. VACACIONES PROPORCIONALES</div>
+        <div class="fila"><span>Días por pagar (Cálculo según Excel):</span><span>6</span></div>
+        <div class="fila"><span>Monto Vacaciones:</span><span id="resVac">$600.000</span></div>
+
+        <div class="sec-titulo">II. INDEMNIZACIÓN AÑOS DE SERVICIO (IAS)</div>
+        <div class="fila"><span>Años de servicio (Tope Máximo):</span><span>11</span></div>
+        <div class="fila"><span>Tope 90 UF mensual:</span><span id="resTope">$3.575.516</span></div>
+        <div class="fila" style="font-weight:bold;"><span>Subtotal IAS:</span><span id="resIAS">$37.382.354</span></div>
+
+        <div class="total-box">
+            TOTAL LÍQUIDO A PAGAR: <span id="resTotal">$41.380.752</span>
         </div>
     </div>
-    <div class="grid">
-        <div class="field"><label>SUELDO BASE</label><input type="number" id="sBase" value="1000000"></div>
-        <div class="field"><label>GRATIFICACIÓN</label><input type="number" id="sGrat" value="209396"></div>
-        <div class="field"><label>BONOS/COMIS.</label><input type="number" id="sBono" value="2000000"></div>
-        <div class="field"><label>COLACIÓN</label><input type="number" id="sCola" value="112500"></div>
-        <div class="field"><label>MOVILIZACIÓN</label><input type="number" id="sMovi" value="76500"></div>
-    </div>
-    <button id="btnCalcular" onclick="abrirModal()">CALCULAR FINIQUITO</button>
-</div>
 
-<div id="miModal" class="modal">
-    <div class="modal-content">
-        <h3>Confirmar Envío</h3>
-        <p>Ingresa tus datos para generar el documento oficial.</p>
-        <input type="text" id="userName" placeholder="Nombre Completo">
-        <input type="email" id="userEmail" placeholder="Correo Electrónico">
-        <button class="btn-enviar" onclick="procesarEnvio()">GENERAR Y ENVIAR</button>
-    </div>
-</div>
-
-<div id="informe-final">
-    <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 10px;">
-        <h2 style="margin:0; color:#333">DETALLE DE FINIQUITO PROFESIONAL</h2>
-        <p>Generado para: <span id="pdfNombre"></span></p>
-    </div>
-    <div class="sec-titulo">I. VACACIONES PROPORCIONALES</div>
-    <div class="fila"><span>Días Totales:</span><span>6</span></div>
-    <div class="fila"><span>Total Vacaciones:</span><span id="resVac">$600.000</span></div>
-    <div class="sec-titulo">II. INDEMNIZACIÓN AÑOS DE SERVICIO</div>
-    <div class="fila"><span>Años a Pagar (Tope 11):</span><span>11</span></div>
-    <div class="fila"><span>Tope 90 UF aplicado:</span><span id="resTope">$3.575.516</span></div>
-    <div class="fila" style="font-weight:bold;"><span>Subtotal IAS:</span><span id="resIAS">$37.382.354</span></div>
-    <div style="font-size:1.5rem; text-align:right; margin-top:30px; font-weight:bold;">
-        TOTAL LÍQUIDO: <span id="resTotal">$41.380.752</span>
-    </div>
+    <button id="btnPDF" onclick="descargarPDF()">DESCARGAR COPIA EN PDF</button>
 </div>
 
 <script>
     const fmc = (v) => '$' + Math.round(v).toLocaleString('es-CL');
 
-    function abrirModal() {
-        document.getElementById('miModal').style.display = 'flex';
-    }
-
     function calcular() {
-        // Esta función asegura que los datos del PDF se actualicen antes de bajarlo
         const uf = parseFloat(document.getElementById('vUF').value) || 0;
         const sBase = parseFloat(document.getElementById('sBase').value) || 0;
         const sBono = parseFloat(document.getElementById('sBono').value) || 0;
@@ -92,54 +71,35 @@
         const sCola = parseFloat(document.getElementById('sCola').value) || 0;
         const sMovi = parseFloat(document.getElementById('sMovi').value) || 0;
 
+        // Lógica de topes
         const baseCalculo = sBase + sGrat + sBono + sCola + sMovi;
         const tope90 = uf * 90;
-        const iasFinal = Math.min(baseCalculo, tope90) * 11;
+        const baseConTope = Math.min(baseCalculo, tope90);
+        
+        const iasFinal = baseConTope * 11;
         const vacFinal = ((sBase + sBono) / 30) * 6;
 
+        // Actualizar pantalla en tiempo real
         document.getElementById('resTope').innerText = fmc(tope90);
         document.getElementById('resIAS').innerText = fmc(iasFinal);
         document.getElementById('resVac').innerText = fmc(vacFinal);
-        document.getElementById('resTotal').innerText = fmc(iasFinal + vacFinal + Math.min(baseCalculo, tope90));
+        document.getElementById('resTotal').innerText = fmc(iasFinal + vacFinal + baseConTope);
     }
 
-    function procesarEnvio() {
-        const nombre = document.getElementById('userName').value;
-        const email = document.getElementById('userEmail').value;
-
-        if(!nombre || !email) {
-            alert("Por favor completa los datos");
-            return;
-        }
-
-        const ultimaVez = localStorage.getItem('last_finiquito_' + email);
-        const ahora = new Date().getTime();
-
-        if (ultimaVez && (ahora - ultimaVez < 24 * 60 * 60 * 1000)) {
-            alert("Ya has generado un finiquito hoy. Podrás volver a enviarlo en 24 horas.");
-            return;
-        }
-
-        document.getElementById('pdfNombre').innerText = nombre;
-        calcular();
-
+    function descargarPDF() {
         const element = document.getElementById('informe-final');
         const opt = {
             margin: 0.5,
-            filename: 'Finiquito_' + nombre + '.pdf',
+            filename: 'Finiquito_Detallado.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
+            html2canvas: { scale: 2 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
-
-        setTimeout(() => {
-            html2pdf().set(opt).from(element).save().then(() => {
-                localStorage.setItem('last_finiquito_' + email, ahora);
-                alert("¡Éxito! El finiquito ha sido generado y descargado correctamente.");
-                document.getElementById('miModal').style.display = 'none';
-            });
-        }, 500);
+        html2pdf().set(opt).from(element).save();
     }
+
+    // Calcular al cargar para que no aparezca en $0
+    window.onload = calcular;
 </script>
 </body>
 </html>
