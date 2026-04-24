@@ -2,127 +2,203 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora de Finiquito - Bruno González</title>
+    <title>Calculadora de Finiquito Profesional - Bruno González</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --purple: #a288e3; --green: #00ff88; --text: #e0e0e0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: var(--card); padding: 30px; border-radius: 12px; max-width: 800px; width: 100%; border-top: 5px solid var(--purple); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h2 { color: var(--purple); text-align: center; margin-bottom: 25px; }
+        .container { background: var(--card); padding: 30px; border-radius: 12px; max-width: 950px; width: 100%; border-top: 5px solid var(--purple); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: var(--purple); text-align: center; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .field { display: flex; flex-direction: column; }
-        label { font-size: 0.75rem; color: #aaa; margin-bottom: 5px; font-weight: bold; }
-        input, select { background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; outline: none; }
+        label { font-size: 0.7rem; color: #aaa; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        input, select { background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--purple); }
         
-        /* Informe en Pantalla Estilo Profesional */
-        #informe-final { background: #f0f0f0; color: #333; padding: 40px; margin-top: 30px; border-radius: 8px; width: 100%; box-sizing: border-box; }
-        .sec-titulo { background: #e0e0e0; padding: 8px; font-weight: bold; border-left: 5px solid #a288e3; margin: 15px 0; color: #6a1b9a; text-transform: uppercase; font-size: 0.9rem; }
-        .fila { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #ccc; }
-        .total-box { font-size: 1.6rem; text-align: right; margin-top: 25px; color: #1b5e20; font-weight: bold; border-top: 2px solid #333; padding-top: 15px; }
+        .condicional-aviso { background: #263238; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px dashed var(--purple); display: none; }
+        
+        #informe-final { background: white; color: #333; padding: 40px; margin-top: 30px; border-radius: 8px; width: 100%; box-sizing: border-box; }
+        .sec-titulo { background: #f4f4f4; padding: 10px; font-weight: bold; border-left: 5px solid #6a1b9a; margin: 20px 0 10px 0; color: #6a1b9a; text-transform: uppercase; font-size: 0.85rem; }
+        .fila { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        .total-box { font-size: 1.8rem; text-align: right; margin-top: 30px; color: #1b5e20; font-weight: bold; border-top: 2px solid #333; padding-top: 15px; }
+        .nota-legal { font-size: 0.75rem; color: #777; margin-top: 10px; font-style: italic; }
         
         #btnPDF { width: 100%; background: var(--green); color: #121212; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 20px; transition: 0.3s; }
-        #btnPDF:hover { filter: brightness(1.2); }
+        #btnPDF:hover { filter: brightness(1.1); transform: translateY(-2px); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Sistema de Finiquitos</h2>
+    <h2>Calculadora de Finiquito Profesional</h2>
     
     <div class="grid">
-        <div class="field"><label>VALOR UF</label><input type="number" id="vUF" value="39727.96" oninput="calcular()"></div>
-        <div class="field"><label>CAUSAL</label>
-            <select id="causal" onchange="calcular()">
-                <option value="161">Art. 161 - Necesidades Empresa</option>
-                <option value="159">Art. 159 - Renuncia/Mutuo Acuerdo</option>
-            </select>
-        </div>
-        <div class="field"><label>DÍAS VACACIONES PENDIENTES</label><input type="number" id="vDias" value="6" oninput="calcular()"></div>
+        <div class="field"><label>Fecha Inicio Contrato</label><input type="date" id="fInicio" value="2008-10-05" onchange="calcular()"></div>
+        <div class="field"><label>Fecha Término</label><input type="date" id="fTermino" value="2025-12-30" onchange="calcular()"></div>
+        <div class="field"><label>Valor UF Actual</label><input type="number" id="vUF" value="39727.96" oninput="calcular()"></div>
+    </div>
+
+    <div class="field" style="margin-bottom: 15px;">
+        <label>Causal de Término de Contrato</label>
+        <select id="causal" onchange="verificarCausal()">
+            <option value="159-1">Art. 159 N°1: Mutuo Acuerdo de las Partes</option>
+            <option value="159-2">Art. 159 N°2: Renuncia del Trabajador</option>
+            <option value="159-3">Art. 159 N°3: Muerte del Trabajador</option>
+            <option value="159-4">Art. 159 N°4: Vencimiento del plazo convenido</option>
+            <option value="159-5">Art. 159 N°5: Termino del trabajo acordado</option>
+            <option value="159-6">Art. 159 N°6: Caso fortuito o fuerza mayor</option>
+            <option value="160-1">Art. 160 N°1: Conductas indebidas o graves del trabajador</option>
+            <option value="160-2">Art. 160 N°2: Realizar actividades prohibidas en el contrato</option>
+            <option value="160-3">Art. 160 N°3: Inasistencia Injustificada</option>
+            <option value="160-4">Art. 160 N°4: Abandono del trabajo</option>
+            <option value="160-5">Art. 160 N°5: Actos u omisiones temerarias (Seguridad)</option>
+            <option value="160-6">Art. 160 N°6: Perjuicio material causado intencionalmente</option>
+            <option value="160-7">Art. 160 N°7: Incumplimiento grave de las obligaciones</option>
+            <option value="161-1" selected>Art. 161: Necesidades de la empresa</option>
+            <option value="161-2">Art. 161: Desahucio escrito del empleador</option>
+            <option value="163">Art. 163 Bis: Por procedimiento concursal de liquidación</option>
+            <option value="171-1">Art. 171: Autodespido por Incumplimiento grave</option>
+            <option value="171-2">Art. 171: Autodespido por otras causales</option>
+        </select>
+    </div>
+
+    <div id="boxAviso" class="condicional-aviso">
+        <label>¿Se dio aviso por escrito con 30 días de anticipación?</label>
+        <select id="avisoPrevio" onchange="calcular()">
+            <option value="NO">NO (Corresponde pagar Mes de Aviso)</option>
+            <option value="SI">SÍ (No corresponde pago)</option>
+        </select>
     </div>
 
     <div class="grid">
-        <div class="field"><label>SUELDO BASE</label><input type="number" id="sBase" value="1000000" oninput="calcular()"></div>
-        <div class="field"><label>GRATIFICACIÓN</label><input type="number" id="sGrat" value="209396" oninput="calcular()"></div>
-        <div class="field"><label>BONOS/COMIS.</label><input type="number" id="sBono" value="2000000" oninput="calcular()"></div>
-        <div class="field"><label>COLACIÓN</label><input type="number" id="sCola" value="112500" oninput="calcular()"></div>
-        <div class="field"><label>MOVILIZACIÓN</label><input type="number" id="sMovi" value="76500" oninput="calcular()"></div>
+        <div class="field"><label>Sueldo Base</label><input type="number" id="sBase" value="1000000" oninput="calcular()"></div>
+        <div class="field"><label>Gratificación</label><input type="number" id="sGrat" value="209396" oninput="calcular()"></div>
+        <div class="field"><label>Bonos / Comisiones</label><input type="number" id="sBono" value="2000000" oninput="calcular()"></div>
+        <div class="field"><label>Asig. Colación</label><input type="number" id="sCola" value="112500" oninput="calcular()"></div>
+        <div class="field"><label>Asig. Movilización</label><input type="number" id="sMovi" value="76500" oninput="calcular()"></div>
+        <div class="field"><label>Vacaciones Pend. (Días)</label><input type="number" id="vDias" value="6" oninput="calcular()"></div>
     </div>
 
     <div id="informe-final">
-        <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+        <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 15px;">
             <h2 style="margin:0; color:#333">LIQUIDACIÓN DE FINIQUITO: BRUNO GONZÁLEZ</h2>
+            <p id="infoFechas" style="margin:8px 0; color:#555; font-weight: bold;"></p>
         </div>
 
         <div class="sec-titulo">I. VACACIONES PROPORCIONALES</div>
-        <div class="fila"><span>Días Totales (Hábiles + Inhábi.):</span><span id="txtDias">6</span></div>
+        <div class="fila"><span>Días Totales a Pagar (Hábiles + Inhábiles):</span><span id="txtDias">6</span></div>
         <div class="fila"><span>Base Diaria (Sueldo + Bono) / 30:</span><span id="txtBaseDia">$100.000</span></div>
-        <div class="fila" style="font-weight:bold;"><span>Total Vacaciones:</span><span id="resVac">$600.000</span></div>
+        <div class="fila" style="font-weight:bold; color: #333;"><span>Total Vacaciones Proporcionales:</span><span id="resVac">$600.000</span></div>
 
-        <div class="sec-titulo">II. INDEMNIZACIÓN AÑOS DE SERVICIO (IAS)</div>
-        <div class="fila"><span>Antigüedad Real:</span><span>17 años, 2 meses</span></div>
-        <div class="fila"><span>Años a Pagar (Tope Legal 11):</span><span>11</span></div>
-        <div class="fila"><span>Tope 90 UF aplicado:</span><span id="resTope">$3.575.516</span></div>
-        <div class="fila" style="font-weight:bold;"><span>Total IAS:</span><span id="resIAS">$37.382.356</span></div>
+        <div id="resDetalleIAS" style="display:block;">
+            <div class="sec-titulo">II. INDEMNIZACIÓN AÑOS DE SERVICIO (IAS)</div>
+            <div class="fila"><span>Antigüedad Calculada:</span><span id="txtAntiguedad">17 años</span></div>
+            <div class="fila"><span>Años a Pagar (Tope Legal 11):</span><span>11</span></div>
+            <div class="fila"><span>Suma Base Mensual (Base+Grat+Bono+Cola+Movi):</span><span id="txtBaseMensual">$3.398.396</span></div>
+            <div class="fila"><span>Tope 90 UF aplicado:</span><span id="resTope">$3.575.516</span></div>
+            <div class="fila" style="font-weight:bold; color: #333;"><span>Total Indemnización Años de Servicio:</span><span id="resIAS">$37.382.354</span></div>
+        </div>
 
-        <div id="secAviso" style="display:block;">
+        <div id="resDetalleAviso" style="display:none;">
             <div class="sec-titulo">III. INDEMNIZACIÓN SUSTITUTIVA MES DE AVISO</div>
-            <div class="fila"><span>Monto (Base Mensual con Tope):</span><span id="resAviso">$3.398.396</span></div>
+            <div class="fila"><span>Monto Mes de Aviso (Con tope 90 UF):</span><span id="resMontoAviso">$3.398.396</span></div>
         </div>
 
         <div class="total-box">
             MONTO TOTAL LÍQUIDO: <span id="resTotal">$41.380.752</span>
         </div>
+        <p class="nota-legal">* Cálculo estimativo sujeto a validación de imposiciones y deudas previsionales.</p>
     </div>
 
-    <button id="btnPDF" onclick="descargarPDF()">GENERAR INFORME PDF</button>
+    <button id="btnPDF" onclick="descargarPDF()">DESCARGAR INFORME EN PDF</button>
 </div>
 
 <script>
     const fmc = (v) => '$' + Math.round(v).toLocaleString('es-CL');
 
+    function verificarCausal() {
+        const causal = document.getElementById('causal').value;
+        const boxAviso = document.getElementById('boxAviso');
+        
+        // El aviso previo solo es relevante para Necesidades de la Empresa o Desahucio (161)
+        if (causal.startsWith('161')) {
+            boxAviso.style.display = 'block';
+        } else {
+            boxAviso.style.display = 'none';
+            document.getElementById('avisoPrevio').value = "SI";
+        }
+        calcular();
+    }
+
+    function calcularAntiguedad(inicio, termino) {
+        let start = new Date(inicio);
+        let end = new Date(termino);
+        let diff = end.getFullYear() - start.getFullYear();
+        if (end.getMonth() < start.getMonth() || (end.getMonth() == start.getMonth() && end.getDate() < start.getDate())) {
+            diff--;
+        }
+        return diff < 0 ? 0 : diff;
+    }
+
     function calcular() {
+        const fI = document.getElementById('fInicio').value;
+        const fT = document.getElementById('fTermino').value;
         const uf = parseFloat(document.getElementById('vUF').value) || 0;
-        const diasVac = parseFloat(document.getElementById('vDias').value) || 0;
         const sBase = parseFloat(document.getElementById('sBase').value) || 0;
-        const sBono = parseFloat(document.getElementById('sBono').value) || 0;
         const sGrat = parseFloat(document.getElementById('sGrat').value) || 0;
+        const sBono = parseFloat(document.getElementById('sBono').value) || 0;
         const sCola = parseFloat(document.getElementById('sCola').value) || 0;
         const sMovi = parseFloat(document.getElementById('sMovi').value) || 0;
+        const diasVac = parseFloat(document.getElementById('vDias').value) || 0;
+        const aviso = document.getElementById('avisoPrevio').value;
         const causal = document.getElementById('causal').value;
 
-        // Cálculos de base y topes
-        const baseCalculo = sBase + sGrat + sBono + sCola + sMovi;
+        // Base de cálculo integral (Sueldo + Grat + Bonos + Colación + Movilización)
+        const sumaTotalMensual = sBase + sGrat + sBono + sCola + sMovi;
         const tope90 = uf * 90;
-        const baseConTope = Math.min(baseCalculo, tope90);
+        const baseConTope = Math.min(sumaTotalMensual, tope90);
+        
+        // Lógica de pago de IAS: Solo si es Art. 161, 163 o 171
+        const correspondeIAS = (causal.startsWith('161') || causal === '163' || causal.startsWith('171'));
+        
+        const añosReales = calcularAntiguedad(fI, fT);
+        const añosAPagar = Math.min(añosReales, 11);
+        let iasTotal = correspondeIAS ? (baseConTope * añosAPagar) : 0;
+
+        // Vacaciones (Siempre se pagan) - Base: Sueldo Base + Bonos variables
         const baseDiariaVac = (sBase + sBono) / 30;
-        
-        const iasFinal = baseConTope * 11;
-        const vacFinal = baseDiariaVac * diasVac;
-        
-        // Lógica de Mes de Aviso
-        let avisoMonto = 0;
-        if (causal === "161") {
-            avisoMonto = baseConTope;
-            document.getElementById('secAviso').style.display = 'block';
+        const vacTotal = baseDiariaVac * diasVac;
+
+        // Mes de Aviso: Solo si es Art 161 y NO se avisó
+        let montoAviso = 0;
+        if (causal.startsWith('161') && aviso === "NO") {
+            montoAviso = baseConTope;
+            document.getElementById('resDetalleAviso').style.display = 'block';
         } else {
-            document.getElementById('secAviso').style.display = 'none';
+            document.getElementById('resDetalleAviso').style.display = 'none';
         }
 
-        // Actualizar UI
+        // Mostrar u ocultar sección IAS en el informe
+        document.getElementById('resDetalleIAS').style.display = correspondeIAS ? 'block' : 'none';
+
+        // Actualizar Informe
+        document.getElementById('infoFechas').innerText = `Periodo: ${fI} al ${fT}`;
         document.getElementById('txtDias').innerText = diasVac;
         document.getElementById('txtBaseDia').innerText = fmc(baseDiariaVac);
-        document.getElementById('resVac').innerText = fmc(vacFinal);
+        document.getElementById('resVac').innerText = fmc(vacTotal);
+        document.getElementById('txtAntiguedad').innerText = `${añosReales} años`;
+        document.getElementById('txtBaseMensual').innerText = fmc(sumaTotalMensual);
         document.getElementById('resTope').innerText = fmc(tope90);
-        document.getElementById('resIAS').innerText = fmc(iasFinal);
-        document.getElementById('resAviso').innerText = fmc(avisoMonto);
-        document.getElementById('resTotal').innerText = fmc(iasFinal + vacFinal + avisoMonto);
+        document.getElementById('resIAS').innerText = fmc(iasTotal);
+        document.getElementById('resMontoAviso').innerText = fmc(montoAviso);
+        document.getElementById('resTotal').innerText = fmc(iasTotal + vacTotal + montoAviso);
     }
 
     function descargarPDF() {
         const element = document.getElementById('informe-final');
         const opt = {
             margin: 0.5,
-            filename: 'Finiquito_Bruno_Gonzalez.pdf',
+            filename: 'Finiquito_Oficial_Chile.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -130,7 +206,7 @@
         html2pdf().set(opt).from(element).save();
     }
 
-    window.onload = calcular;
+    window.onload = verificarCausal;
 </script>
 </body>
 </html>
