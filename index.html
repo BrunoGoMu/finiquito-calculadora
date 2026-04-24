@@ -5,31 +5,42 @@
     <title>Calculadora de Finiquito - Bruno González</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --bg: #f4f7f6; --card: #ffffff; --purple: #6a1b9a; --text: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { background: var(--card); padding: 25px; border-radius: 8px; max-width: 850px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: var(--purple); border-bottom: 2px solid var(--purple); padding-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px; }
+        :root { --bg: #121212; --card: #1e1e1e; --purple: #a288e3; --green: #00ff88; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: var(--card); padding: 30px; border-radius: 12px; max-width: 800px; width: 100%; border-top: 5px solid var(--purple); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: var(--purple); text-align: center; margin-bottom: 25px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .field { display: flex; flex-direction: column; }
-        label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: #666; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        label { font-size: 0.75rem; color: #aaa; margin-bottom: 5px; font-weight: bold; }
+        input, select { background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; outline: none; }
         
-        #btnPDF { background: #2e7d32; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        /* Informe en Pantalla Estilo Profesional */
+        #informe-final { background: #f0f0f0; color: #333; padding: 40px; margin-top: 30px; border-radius: 8px; width: 100%; box-sizing: border-box; }
+        .sec-titulo { background: #e0e0e0; padding: 8px; font-weight: bold; border-left: 5px solid #a288e3; margin: 15px 0; color: #6a1b9a; text-transform: uppercase; font-size: 0.9rem; }
+        .fila { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #ccc; }
+        .total-box { font-size: 1.6rem; text-align: right; margin-top: 25px; color: #1b5e20; font-weight: bold; border-top: 2px solid #333; padding-top: 15px; }
         
-        /* Estilo del Informe en Pantalla */
-        #informe-final { margin-top: 30px; padding: 20px; border: 1px solid #ddd; background: white; }
-        .sec-titulo { background: #eee; padding: 10px; font-weight: bold; margin: 15px 0; border-left: 5px solid var(--purple); }
-        .fila { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-        .total-box { font-size: 1.4rem; text-align: right; margin-top: 20px; color: #2e7d32; font-weight: bold; }
+        #btnPDF { width: 100%; background: var(--green); color: #121212; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 20px; transition: 0.3s; }
+        #btnPDF:hover { filter: brightness(1.2); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Calculadora Legal de Finiquitos</h2>
+    <h2>Sistema de Finiquitos</h2>
     
     <div class="grid">
-        <div class="field"><label>VALOR UF Hoy</label><input type="number" id="vUF" value="39727.96" oninput="calcular()"></div>
+        <div class="field"><label>VALOR UF</label><input type="number" id="vUF" value="39727.96" oninput="calcular()"></div>
+        <div class="field"><label>CAUSAL</label>
+            <select id="causal" onchange="calcular()">
+                <option value="161">Art. 161 - Necesidades Empresa</option>
+                <option value="159">Art. 159 - Renuncia/Mutuo Acuerdo</option>
+            </select>
+        </div>
+        <div class="field"><label>DÍAS VACACIONES PENDIENTES</label><input type="number" id="vDias" value="6" oninput="calcular()"></div>
+    </div>
+
+    <div class="grid">
         <div class="field"><label>SUELDO BASE</label><input type="number" id="sBase" value="1000000" oninput="calcular()"></div>
         <div class="field"><label>GRATIFICACIÓN</label><input type="number" id="sGrat" value="209396" oninput="calcular()"></div>
         <div class="field"><label>BONOS/COMIS.</label><input type="number" id="sBono" value="2000000" oninput="calcular()"></div>
@@ -38,26 +49,32 @@
     </div>
 
     <div id="informe-final">
-        <div style="text-align:center;">
-            <h3 style="margin:0;">DETALLE DE CÁLCULO ESTIMATIVO</h3>
-            <p style="color: #666; font-size: 0.9rem;">Basado en topes legales vigentes (11 años / 90 UF)</p>
+        <div style="text-align:center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+            <h2 style="margin:0; color:#333">LIQUIDACIÓN DE FINIQUITO: BRUNO GONZÁLEZ</h2>
         </div>
 
         <div class="sec-titulo">I. VACACIONES PROPORCIONALES</div>
-        <div class="fila"><span>Días por pagar (Cálculo según Excel):</span><span>6</span></div>
-        <div class="fila"><span>Monto Vacaciones:</span><span id="resVac">$600.000</span></div>
+        <div class="fila"><span>Días Totales (Hábiles + Inhábi.):</span><span id="txtDias">6</span></div>
+        <div class="fila"><span>Base Diaria (Sueldo + Bono) / 30:</span><span id="txtBaseDia">$100.000</span></div>
+        <div class="fila" style="font-weight:bold;"><span>Total Vacaciones:</span><span id="resVac">$600.000</span></div>
 
         <div class="sec-titulo">II. INDEMNIZACIÓN AÑOS DE SERVICIO (IAS)</div>
-        <div class="fila"><span>Años de servicio (Tope Máximo):</span><span>11</span></div>
-        <div class="fila"><span>Tope 90 UF mensual:</span><span id="resTope">$3.575.516</span></div>
-        <div class="fila" style="font-weight:bold;"><span>Subtotal IAS:</span><span id="resIAS">$37.382.354</span></div>
+        <div class="fila"><span>Antigüedad Real:</span><span>17 años, 2 meses</span></div>
+        <div class="fila"><span>Años a Pagar (Tope Legal 11):</span><span>11</span></div>
+        <div class="fila"><span>Tope 90 UF aplicado:</span><span id="resTope">$3.575.516</span></div>
+        <div class="fila" style="font-weight:bold;"><span>Total IAS:</span><span id="resIAS">$37.382.356</span></div>
+
+        <div id="secAviso" style="display:block;">
+            <div class="sec-titulo">III. INDEMNIZACIÓN SUSTITUTIVA MES DE AVISO</div>
+            <div class="fila"><span>Monto (Base Mensual con Tope):</span><span id="resAviso">$3.398.396</span></div>
+        </div>
 
         <div class="total-box">
-            TOTAL LÍQUIDO A PAGAR: <span id="resTotal">$41.380.752</span>
+            MONTO TOTAL LÍQUIDO: <span id="resTotal">$41.380.752</span>
         </div>
     </div>
 
-    <button id="btnPDF" onclick="descargarPDF()">DESCARGAR COPIA EN PDF</button>
+    <button id="btnPDF" onclick="descargarPDF()">GENERAR INFORME PDF</button>
 </div>
 
 <script>
@@ -65,32 +82,47 @@
 
     function calcular() {
         const uf = parseFloat(document.getElementById('vUF').value) || 0;
+        const diasVac = parseFloat(document.getElementById('vDias').value) || 0;
         const sBase = parseFloat(document.getElementById('sBase').value) || 0;
         const sBono = parseFloat(document.getElementById('sBono').value) || 0;
         const sGrat = parseFloat(document.getElementById('sGrat').value) || 0;
         const sCola = parseFloat(document.getElementById('sCola').value) || 0;
         const sMovi = parseFloat(document.getElementById('sMovi').value) || 0;
+        const causal = document.getElementById('causal').value;
 
-        // Lógica de topes
+        // Cálculos de base y topes
         const baseCalculo = sBase + sGrat + sBono + sCola + sMovi;
         const tope90 = uf * 90;
         const baseConTope = Math.min(baseCalculo, tope90);
+        const baseDiariaVac = (sBase + sBono) / 30;
         
         const iasFinal = baseConTope * 11;
-        const vacFinal = ((sBase + sBono) / 30) * 6;
+        const vacFinal = baseDiariaVac * diasVac;
+        
+        // Lógica de Mes de Aviso
+        let avisoMonto = 0;
+        if (causal === "161") {
+            avisoMonto = baseConTope;
+            document.getElementById('secAviso').style.display = 'block';
+        } else {
+            document.getElementById('secAviso').style.display = 'none';
+        }
 
-        // Actualizar pantalla en tiempo real
+        // Actualizar UI
+        document.getElementById('txtDias').innerText = diasVac;
+        document.getElementById('txtBaseDia').innerText = fmc(baseDiariaVac);
+        document.getElementById('resVac').innerText = fmc(vacFinal);
         document.getElementById('resTope').innerText = fmc(tope90);
         document.getElementById('resIAS').innerText = fmc(iasFinal);
-        document.getElementById('resVac').innerText = fmc(vacFinal);
-        document.getElementById('resTotal').innerText = fmc(iasFinal + vacFinal + baseConTope);
+        document.getElementById('resAviso').innerText = fmc(avisoMonto);
+        document.getElementById('resTotal').innerText = fmc(iasFinal + vacFinal + avisoMonto);
     }
 
     function descargarPDF() {
         const element = document.getElementById('informe-final');
         const opt = {
             margin: 0.5,
-            filename: 'Finiquito_Detallado.pdf',
+            filename: 'Finiquito_Bruno_Gonzalez.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -98,7 +130,6 @@
         html2pdf().set(opt).from(element).save();
     }
 
-    // Calcular al cargar para que no aparezca en $0
     window.onload = calcular;
 </script>
 </body>
