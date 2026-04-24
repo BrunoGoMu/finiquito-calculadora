@@ -117,17 +117,24 @@
         document.getElementById('areaIAS').style.display = (document.getElementById('causal').value === "161") ? "block" : "none";
     }
 
-    function descargarPDF() {
-        const element = document.getElementById('informe-final'); // NOMBRE EXACTO PARA QUE NO SALGA VACÍO
-        const opt = {
-            margin: 0.5,
-            filename: 'Finiquito_Bruno_Gonzalez.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
+  function descargarPDF() {
+    // Primero ejecutamos el cálculo para asegurar que los datos estén en pantalla
+    calcular(); 
+    
+    const element = document.getElementById('informe-final'); 
+    const opt = {
+        margin: [0.5, 0.5],
+        filename: 'Finiquito.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 3, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Añadimos un pequeño retraso para que html2pdf capture los números generados
+    setTimeout(() => {
         html2pdf().set(opt).from(element).save();
-    }
+    }, 500); 
+}
     
     window.onload = calcular;
 </script>
